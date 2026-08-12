@@ -28,3 +28,47 @@ describe("isToday function", () => {
     expect(isToday(otherDate, today)).toBe(false);
   });
 });
+const request = require("supertest");
+const app = require("../app");
+
+describe("Calendar API", () => {
+  test("GET /api/calendar should return 200", async () => {
+    const response = await request(app).get("/api/calendar");
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.body).toBeDefined();
+  });
+});
+test("Invalid endpoint should return 404", async () => {
+  const response = await request(app).get("/api/invalid");
+
+  expect(response.statusCode).toBe(404);
+});
+test("POST /api/calendar - debug", async () => {
+  const response = await request(app).post("/api/calendar").send({
+    title: "Automation Interview",
+    date: "2026-08-15",
+  });
+
+  console.log("STATUS:", response.statusCode);
+  console.log("BODY:", response.body);
+  console.log("TEXT:", response.text);
+  console.log("HEADERS:", response.headers);
+
+  expect(response.statusCode).toBe(201);
+  expect(response.body).toHaveProperty("title");
+});
+test("PUT /api/calendar/:id should update an event", async () => {
+  const response = await request(app).put("/api/calendar/1").send({
+    title: "Updated Meeting",
+    date: "2026-08-16",
+  });
+
+  expect(response.statusCode).toBe(200);
+});
+test("DELETE /api/calendar/:id should delete an event", async () => {
+  const response = await request(app).delete("/api/calendar/1");
+
+  expect(response.statusCode).toBe(200);
+});
