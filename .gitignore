@@ -3,3 +3,6 @@ node_modules/
 coverage/
 playwright-report/
 test-results/
+
+# AWS SSH private keys
+*.pem
