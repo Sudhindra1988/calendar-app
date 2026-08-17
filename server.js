@@ -1,66 +1,45 @@
 const express = require("express");
+const path = require("path");
 
 const app = express();
 
 app.use(express.json());
 
+// Serve frontend
+app.use(express.static(path.join(__dirname, "public")));
+
 // In-memory calendar events
-let events = [
-  {
-    id: 1,
-    title: "Existing Meeting",
-    date: "2026-08-17",
-  },
-];
+let events = [];
+let nextId = 1;
 
-let nextId = 2;
-
-// =========================
 // Health Check
-// =========================
-
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
   });
 });
 
-// =========================
-// GET all calendar events
-// =========================
-
+// GET all events
 app.get("/api/calendar", (req, res) => {
   res.status(200).json(events);
 });
 
-// =========================
-// POST create calendar event
-// =========================
-
+// POST create event
 app.post("/api/calendar", (req, res) => {
   const { title, date } = req.body;
 
-  if (!title || !date) {
-    return res.status(400).json({
-      error: "Title and date are required",
-    });
-  }
-
-  const newEvent = {
+  const event = {
     id: nextId++,
     title,
     date,
   };
 
-  events.push(newEvent);
+  events.push(event);
 
-  res.status(201).json(newEvent);
+  res.status(201).json(event);
 });
 
-// =========================
-// PUT update calendar event
-// =========================
-
+// PUT update event
 app.put("/api/calendar/:id", (req, res) => {
   const id = Number(req.params.id);
 
@@ -72,61 +51,33 @@ app.put("/api/calendar/:id", (req, res) => {
     });
   }
 
-  const { title, date } = req.body;
-
-  if (title !== undefined) {
-    event.title = title;
-  }
-
-  if (date !== undefined) {
-    event.date = date;
-  }
+  event.title = req.body.title;
+  event.date = req.body.date;
 
   res.status(200).json(event);
 });
 
-// =========================
-// DELETE calendar event
-// =========================
-
+// DELETE event
 app.delete("/api/calendar/:id", (req, res) => {
   const id = Number(req.params.id);
 
-  const eventIndex = events.findIndex((event) => event.id === id);
+  const index = events.findIndex((event) => event.id === id);
 
-  if (eventIndex === -1) {
+  if (index === -1) {
     return res.status(404).json({
       error: "Event not found",
     });
   }
 
-  const deletedEvent = events.splice(eventIndex, 1)[0];
+  const deletedEvent = events.splice(index, 1)[0];
 
-  res.status(200).json({
-    message: "Event deleted successfully",
-    event: deletedEvent,
-  });
+  res.status(200).json(deletedEvent);
 });
 
-// =========================
-// 404 Handler
-// =========================
-
-app.use((req, res) => {
-  res.status(404).json({
-    error: "Route not found",
-  });
-});
-
-// =========================
 // Start server
-// =========================
-
-const PORT = process.env.PORT || 3000;
-
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  app.listen(3000, () => {
+    console.log("Calendar App running on http://localhost:3000");
   });
 }
 
